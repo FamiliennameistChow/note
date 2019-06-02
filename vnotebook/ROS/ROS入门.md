@@ -40,6 +40,9 @@ echo $ROS_PACKAGE_PATH
 my_packege
     cMakeList.txt
     package.xml
+
+    src //源代码
+    srv //服务
 ```
 ### 创建catkin程序包
 * 在catkin工作空间中的src目录下
@@ -755,6 +758,33 @@ loop_rate.sleep();
 >在 ROS 网络内广播我们将要在 chatter 话题上发布 std_msgs/String 类型的消息
 >以每秒 10 次的频率在 chatter 上发布消息
 
+*  talker.py
+
+```
+#! /urs/bin/env python
+# licesen removed for brecity
+import rospy
+from std_msgs,msg import String
+
+
+def talker():
+	pub = rospy.Publisher('chatter', String, queue_sie=10)
+	rospy.init_node('talker', anonymous=True)
+	rate = rospy.Rate(10)
+	while not rospy.is_shutdown():
+		hello_str = "hello world %s" % rospy.get_time()
+		rospy.loginfo(hello_str)
+		pub.publish(hello_str)
+		rate.sleep()
+
+
+if __name__ == '__main__':
+	try:
+		talker()
+	except rospy.ROSInterruptException:
+		pass
+```
+
 ### 编写订阅器节点
 
 * 在beginner_tutorials package 目录下创建 src/listener.cpp 文件
@@ -847,6 +877,34 @@ ros::spin() 进入自循环，可以尽可能快的调用消息回调函数。�
 >进入自循环，等待消息的到达
 >当消息到达，调用 chatterCallback() 函数
 
+*  listenet.py
+
+```
+#!/usr/bin/env python
+import rospy
+from std_msgs.msg import String
+
+def callback(data):
+    rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
+    
+def listener():
+
+    # In ROS, nodes are uniquely named. If two nodes with the same
+    # name are launched, the previous one is kicked off. The
+    # anonymous=True flag means that rospy will choose a unique
+    # name for our 'listener' node so that multiple listeners can
+    # run simultaneously.
+    rospy.init_node('listener', anonymous=True)
+
+    rospy.Subscriber("chatter", String, callback)
+
+    # spin() simply keeps python from exiting until this node is stopped
+    rospy.spin()
+
+if __name__ == '__main__':
+    listener()
+```
+
 ### 编译节点
 修改`beginner_tutorials`下的`CMakeLists.txt`
 
@@ -900,3 +958,64 @@ add_dependencies(listener beginner_tutorials_generate_messages_cpp)
 这会生成两个可执行文件, talker 和 listener, 默认存储到 devel space 目录下
 
 + 现在要为可执行文件添加对生成的消息文件的依赖
+
+## 测试消息发布器与订阅器
++ 打开ros
+```
+roscore
+```
++ source
+```
+# In your catkin workspace
+$ cd ~/catkin_ws
+$ source ./devel/setup.bash
+```
++ 启动发布器
+```
+$ rosrun beginner_tutorials talker      (C++)
+$ rosrun beginner_tutorials talker.py   (Python) 
+```
+
++ 启动订阅器
+```
+$ rosrun beginner_tutorials listener     (C++)
+$ rosrun beginner_tutorials listener.py  (Python) 
+```
+
+## 编写简单的服务器与客户端
+
+### 编写service节点
+在`beginner_tutorials`包中创建`src/add_two_ints_server.cpp`
+
+```
+#include "ros/ros.h"
+#include "beginner_tutorials/AddTwoInts.h"
+
+bool add(beginner_tutorials::AddTwoInts::Request  &req,
+         beginner_tutorials::AddTwoInts::Response &res)
+{
+  res.sum = req.a + req.b;
+  ROS_INFO("request: x=%ld, y=%ld", (long int)req.a, (long int)req.b);
+  ROS_INFO("sending back response: [%ld]", (long int)res.sum);
+  return true;
+}
+
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "add_two_ints_server");
+  ros::NodeHandle n;
+
+  ros::ServiceServer service = n.advertiseService("add_two_ints", add);
+  ROS_INFO("Ready to add two ints.");
+  ros::spin();
+
+  return 0;
+}
+```
+
+* beginner_tutorials/AddTwoInts.h是由编译系统自动根据我们先前创建的srv文件生成的对应该srv文件的头文件。
+```
+#include "ros/ros.h"
+#include "beginner_tutorials/AddTwoInts.h"
+```
+
