@@ -121,6 +121,13 @@ launch的作用就是用来一次性运行多个文件。一帮放在launch文�
 ### 创建catkin程序包
 * 在catkin工作空间中的src目录下
 现在使用catkin_create_pkg命令来创建一个名为'beginner_tutorials'的新程序包，这个程序包依赖于std_msgs、roscpp和rospy：
+
+```
+catkin_create_pkg <pkg_name> [depend1] [depend2
+]
+```
+
+
 ```
  catkin_create_pkg beginner_tutorials std_msgs rospy roscpp
 ```
