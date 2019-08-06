@@ -1,49 +1,123 @@
 # ROS入门
 
+-------
+## ROS Tools
+
+| 常用指令                                        | 说明                                             |
+| :-------------------------------------------- | :---------------------------------------------- |
+| rosnode list                                   | 查看所有激活的节点                                  |
+| rostopic list                                  | 查看所有激活的topic                                |
+| rostopic info <topic name>	                     | 可以查看topic的调用信息类型，还有它的发布者以及订阅者     |
+| rostopic echo <topic name>                     | 查看对应topic发布的消息                             |
+| rqt_graph	                                      | 以图像的形式表现整个正在运行的ROS系统                  |
+| rqt_plot velocity/data	                        | 以二维图的形式查看topic的输出                        |
+| rosmsg show package/messageName                | 例如：rosmsg show std_msgs/Float64 查看对应的消息类型 |
+| rosrun <packagename> <node name>               | 运行包中的节点（编译成功后才能运行）                   |
+| roslaunch <package name> <launch file>          | 启动.launch文件                                   |
+| catkin_make                                    | 进入到工作区间后，执行会编译所有的包                   |
+| catkin_make -DCATKIN_WHITELIST_PACKAGES=package | 编译指定的包                                       |
+
+
+## ROS 常用命令
+|       命令        |          作用          |
+| :--------------: | :-------------------: |
+|      rospack      |      获取功能包信息      |
+|      rosdep       | 自动安装功能包依赖的其他包 |
+|       roscd       |      功能包目录跳转      |
+|       rosed       |    编辑功能包中的文件    |
+|      rosrun       |  运行功能包中的可执行文件  |
+|     roslaunch     |      运行启动文件       |
+|    catkin_make    |  编译工作空间中的功能包   |
+|       roscp       |    拷贝功能包中的文件    |
+| catkin_create_pkg |       创建功能包        |
+
+
+
+-------
+
 ## ROS工作空间
+
+[参考](https://blog.csdn.net/qq_16481211/article/details/81157725)
+
+![workspace](_v_images/20190721164857947_1299785966.png)
+
 ### catkin工作空间
+![workspce_1](_v_images/20190721165430535_600382879.png)
+
 * 创建catkin空间
+
 ```
 mkdir -p ./catkin_ws(your space name)/src
+catkin_init_workspace ## 创建了camkeLists.txt文件
 cd ./catkin_ws  # 进入工作空间root目录
 catkin_make  # 编译空间
 ```
+
 * `catkin_make `命令在**catkin**工作空间中是一个非常方便的工具。如果你查看一下当前目录应该能看到`build`和`devel`这两个文件夹。
 build 目录是build space的默认所在位置，同时cmake 和 make也是在这里被调用来配置并编译你的程序包。devel 目录是devel space的默认所在位置, 同时也是在你安装程序包之前存放可执行文件和库文件的地方
 *  在`devel`文件夹里面你可以看到几个setup.*sh文件。source这些文件中的任何一个都可以将当前工作空间设置在ROS工作环境的最顶层，想了解更多请参考catkin文档。接下来首先source一下新生成的setup.*sh文件：
 
-```
+``` l
 source devel/setup.bash
-
 ```
+将对应的工作空间的路径加入环境变量ROS_PACKAGE_PATH中。
+如果新开了一个终端命令行，在使用该工作空间前，必须先将该工作空间的路径加入环境变量ROS_PACKAGE_PATH中
+
 * 要想保证工作空间已配置正确需确保ROS_PACKAGE_PATH环境变量包含你的工作空间目录，采用以下命令查看：
 
 ```
 echo $ROS_PACKAGE_PATH
 /home/<youruser>/catkin_ws/src:/opt/ros/indigo/share:/opt/ros/indigo/stacks
 ```
+or 
+
+``` l
+printenv | grep ROS
+
+```
+
+### 多个工作空间处理
+[参考](https://blog.csdn.net/u013834525/article/details/88871318)
+
+> * 删掉`build`和`devel`文件夹
+> * 删掉`ROS_PACKAGE_PATH`环境变量：`unset ROS_PACKAGE_PATH`
+> * 重新编译你的包
+> * 注释掉`~/.bashrc`中无关的包的`bash`，只保留想要的工作空间
+> * `source ~/.bashrc`
 
 -----
-## ros程序包
+## ros程序包(Meta Package)
+
+![package](_v_images/20190721165633542_1062608394.png)
 一个程序包要想称为catkin程序包必须符合以下要求：
 
 * 该程序包必须包含`catkin compliant package.xml`文件
 
 这个package.xml文件提供有关程序包的元信息。
+![xml](_v_images/20190721165719534_54493011.png)
+
 
 * 程序包必须包含一个catkin 版本的`CMakeLists.txt`文件，而`Catkin metapackages`中必须包含一个对CMakeList.txt文件的引用。
 
+* `script`我们ROS里面的可执行程序包括：(1)脚本，如shell或者python；（2）C++头文件或者源文件
+![script](_v_images/20190721165935806_972810673.png)
+
+* 我们还会放一些自定义的通信格式：包括消息`msg`、服务`srv`、动作`action`
+比如我们想在ROS下面自定义一个服务，那我们就在package下新建一个srv文件夹，然后在这个文件夹里放*.srv文件。
+![msg..](_v_images/20190721170214590_1523983760.png)
+
+* 我们还可以在package下放`launch`文件和`config`文件
+launch的作用就是用来一次性运行多个文件。一帮放在launch文件中
+配置文件一般放到config文件夹下。它的自由度比较高，一般用.yaml格式来写
+![launch](_v_images/20190721170401479_557994679.png)
+
+
 * 每个目录下只能有一个程序包。
 这意味着在同一个目录下不能有嵌套的或者多个程序包存在。
+![all](_v_images/20190721170430419_1405775700.png)
 
-```
-my_packege
-    cMakeList.txt
-    package.xml
+-------
 
-    src //源代码
-    srv //服务
-```
 ### 创建catkin程序包
 * 在catkin工作空间中的src目录下
 现在使用catkin_create_pkg命令来创建一个名为'beginner_tutorials'的新程序包，这个程序包依赖于std_msgs、roscpp和rospy：
@@ -203,7 +277,11 @@ roscore
 ```
 
 ### rosnode
-rosnode 显示当前运行的ROS节点信息。rosnode list 指令列出活跃的节点:
+rosnode 显示当前运行的ROS节点信息。`rosnode list` 指令列出活跃的节点:
+
+```
+rosnode info +node_name
+```
 
 ### rosrun
 rosrun 允许你使用包名直接运行一个包内的节点(而不需要知道这个包的路径)
@@ -225,6 +303,11 @@ rosnode ping my_turtle
 -----
 
 ## ROS话题
+
+-----
+ros 话题(topic) 采用**异步通信机制**，传输消息(Message)
+
+-----
 * 开启turtlesim，请在一个新的终端中运行
 
 ```
@@ -247,21 +330,23 @@ rostopic命令工具能让你获取有关ROS话题的信息
 
 ```
 rostopic bw     display bandwidth used by topic
-rostopic echo   print messages to screen
+rostopic echo   print messages to screen 命令行订阅
 rostopic hz     display publishing rate of topic
 rostopic list   print information about active topics
-rostopic pub    publish data to topic
-rostopic type   print topic type
+rostopic pub    publish data to topic　命令行发布
+rostopic type   print topic typero
+rostopic info   print topic info 
 ```
 
-* 使用rostopic echo 显示某个话题上发布的数据
+
+* 使用`rostopic echo` 显示某个话题上发布的数据
 
 ```
 $ rostopic echo /turtle1/cmd_vel
 ```
 你可能看不到任何东西因为现在还没有数据发布到该话题上。接下来我们通过按下方向键使turtle_teleop_key节点发布数据。记住如果turtle没有动起来的话就需要你重新选中turtle_teleop_key节点运行时所在的终端窗口
 
-* 使用rostopic list能够列出所有当前订阅和发布的话题
+* 使用`rostopic list`能够列出所有当前订阅和发布的话题
 
 ```
 rostopic list -v
@@ -282,6 +367,7 @@ $ rostopic pub -1 /turtle1/cmd_vel geometry_msgs/Twist -- '[2.0, 0.0, 0.0]' '[0.
 /turtle1/command_velocity: 这是消息所发布到的话题名称
 geometry_msgs/Twist: 这是所发布消息的类型
 ```
+![rostpic 命令行发布](_v_images/20190806110922201_1668894199.png)
 
 * 你可能已经注意到turtle已经停止移动了。这是因为turtle需要一个稳定的频率为1Hz的命令流来保持移动状态。我们可以使用rostopic pub -r命令来发布一个稳定的命令流
 ```
@@ -304,16 +390,21 @@ rostopic type /turtle1/cmd_vel | rosmsg show
 
 ## ROS Services
 服务（services）是节点之间通讯的另一种方式。服务允许节点发送请求（request） 并获得一个响应（response）
+-- 同步**通讯机制**，传输请求/应答数据
 
 rosservice可以很轻松的使用 ROS 客户端/服务器框架提供的服务。rosservice提供了很多可以在topic上使用的命令，如下所示
 
 ```
-rosservice list         输出可用服务的信息
-rosservice call         调用带参数的服务
-rosservice type         输出服务类型
-rosservice find         依据类型寻找服务find services by service type
-rosservice uri          输出服务的ROSRPC uri
+rosservice list         　　　　输出可用服务的信息
+rosservice call         　　　　调用带参数的服务
+rosservice type         　　　　输出服务类型
+rosservice find         　　　　依据类型寻找服务find services by service type
+rosservice uri          　　　　输出服务的ROSRPC uri
+rosservice info　+service_name 查看某服务的详细信息
 ```
+
+* 发布服务请求
+![服务请求](_v_images/20190806112108270_1300718314.png)
 
 ###  Using rosparam
 rosparam使得我们能够存储并操作ROS 参数服务器（Parameter Server）上的数据。
@@ -603,9 +694,9 @@ generate_messages(
 * 在beginner_tutorials路径上创建src文件夹，这个文件夹将会用来放置 beginner_tutorials package 的所有源代码
 
 在src里创建talker.cpp 
-```
-#include "ros/ros.h"    * ros/ros.h 是一个实用的头文件，它引用了 ROS 系统中大部分常用的头文件
-#include "std_msgs/String.h" * 这引用了 std_msgs/String 消息, 它存放在 std_msgs package 里，是由 String.msg 文件自动生成的头文件
+```cpp
+#include "ros/ros.h"    // ros/ros.h 是一个实用的头文件，它引用了 ROS 系统中大部分常用的头文件
+#include "std_msgs/String.h" // 这引用了 std_msgs/String 消息, 它存放在 std_msgs package 里，是由 String.msg 文件自动生成的头文件
 
 #include <sstream>
 
@@ -691,13 +782,13 @@ int main(int argc, char **argv)
 }
 ```
 *  解析
-```
+```cpp
  ros::init(argc, argv, "talker");
 ```
-**初始化 ROS **。它允许 ROS 通过命令行进行名称重映射——然而这并不是现在讨论的重点。在这里，我们也可以指定节点的名称——运行过程中，节点的名称必须唯一。
+**初始化 ROS**。它允许 ROS 通过命令行进行名称重映射——然而这并不是现在讨论的重点。在这里，我们也可以指定节点的名称——运行过程中，节点的名称必须唯一。
 这里的名称必须是一个 base name ，也就是说，名称内不能包含 / 等符号。
 
-```
+```cpp
 ros::NodeHandle n;
 
 ```
@@ -760,7 +851,7 @@ loop_rate.sleep();
 
 *  talker.py
 
-```
+```python
 #! /urs/bin/env python
 # licesen removed for brecity
 import rospy
@@ -789,7 +880,7 @@ if __name__ == '__main__':
 
 * 在beginner_tutorials package 目录下创建 src/listener.cpp 文件
 
-```
+```cpp
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
@@ -879,7 +970,7 @@ ros::spin() 进入自循环，可以尽可能快的调用消息回调函数。�
 
 *  listenet.py
 
-```
+```python
 #!/usr/bin/env python
 import rospy
 from std_msgs.msg import String
@@ -906,7 +997,7 @@ if __name__ == '__main__':
 ```
 
 ### 编译节点
-修改`beginner_tutorials`下的`CMakeLists.txt`
+修改`beginner_tutorials`(**程序包**)下的`CMakeLists.txt`
 
 ```
 cmake_minimum_required(VERSION 2.8.3)
@@ -1013,9 +1104,131 @@ int main(int argc, char **argv)
 }
 ```
 
-* beginner_tutorials/AddTwoInts.h是由编译系统自动根据我们先前创建的srv文件生成的对应该srv文件的头文件。
+* beginner_tutorials/AddTwoInts.h是由编译系统自动根据我们先前创建的srv文件生成的对应该srv文件的头文件
 ```
 #include "ros/ros.h"
 #include "beginner_tutorials/AddTwoInts.h"
 ```
 
++ 这个函数提供两个int值求和的服务，int值从request里面获取，而返回数据装入response内，这些数据类型都定义在srv文件内部，函数返回一个boolean值
+
+```
+bool add(beginner_tutorials::AddTwoInts::Request  &req,
+         beginner_tutorials::AddTwoInts::Response &res)
+```
+
++ 现在，两个int值已经相加，并存入了response。然后一些关于request和response的信息被记录下来。最后，service完成计算后返回true值
+```
+{
+  res.sum = req.a + req.b;
+  ROS_INFO("request: x=%ld, y=%ld", (long int)req.a, (long int)req.b);
+  ROS_INFO("sending back response: [%ld]", (long int)res.sum);
+  return true;
+}
+```
+
++ 这里，service已经建立起来，并在ROS内发布出来
+```
+ ros::ServiceServer service = n.advertiseService("add_two_ints", add);
+```
+
+### 编写Client 节点
+
+在`beginner_tutorials`包中创建  `src/add_two_ints_client.cpp`文件
+
+```
+#include "ros/ros.h"
+#include "beginner_tutorials/AddTwoInts.h"
+#include <cstdlib>
+
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "add_two_ints_client");
+  if (argc != 3)
+  {
+    ROS_INFO("usage: add_two_ints_client X Y");
+    return 1;
+  }
+
+  ros::NodeHandle n;
+  ros::ServiceClient client = n.serviceClient<beginner_tutorials::AddTwoInts>("add_two_ints");
+  beginner_tutorials::AddTwoInts srv;
+  srv.request.a = atoll(argv[1]);
+  srv.request.b = atoll(argv[2]);
+  if (client.call(srv))
+  {
+    ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service add_two_ints");
+    return 1;
+  }
+
+  return 0;
+}
+```
+
++ 这段代码为add_two_ints service创建一个client。ros::ServiceClient 对象待会用来调用service
+```
+ros::ServiceClient client = n.serviceClient<beginner_tutorials::AddTwoInts>("add_two_ints");
+```
+
++ 这里，我们实例化一个由ROS编译系统自动生成的service类，并给其request成员赋值。一个service类包含两个成员request和response。同时也包括两个类定义Request和Response。
+
+
+```
+  beginner_tutorials::AddTwoInts srv;
+  srv.request.a = atoll(argv[1]);
+  srv.request.b = atoll(argv[2]);
+```
+
++ 这段代码是在调用service。由于service的调用是模态过程（调用的时候占用进程阻止其他代码的执行），一旦调用完成，将返回调用结果。如果service调用成功，call()函数将返回true，srv.response里面的值将是合法的值。如果调用失败，call()函数将返回false，srv.response里面的值将是非法的
+
+```
+  if (client.call(srv))
+```
+
+### 编译节点
+再来编辑一下`beginner_tutorials`里面的`CMakeLists.txt`
+
+1. 将下面的代码添加在文件`CMakeLists.txt`末尾
+
+```
+add_executable(add_two_ints_server src/add_two_ints_server.cpp)
+target_link_libraries(add_two_ints_server ${catkin_LIBRARIES})
+add_dependencies(add_two_ints_server beginner_tutorials_gencpp)
+
+add_executable(add_two_ints_client src/add_two_ints_client.cpp)
+target_link_libraries(add_two_ints_client ${catkin_LIBRARIES})
+add_dependencies(add_two_ints_client beginner_tutorials_gencpp)
+```
+
++ 这段代码将生成两个可执行程序"add_two_ints_server"和"add_two_ints_client"，这两个可执行程序默认被放在你的devel space下的包目录下，默认为~/catkin_ws/devel/lib/share/<package name>。你可以直接调用可执行程序，或者使用rosrun命令去调用它们。它们不会被装在<prefix>/bin目录下，因为当你在你的系统里安装这个包的时候，这样做会污染PATH变量。如果你希望在安装的时候你的可执行程序在PATH变量里面，你需要设置一下install target，请参考：catkin/CMakeLists.txt
+
+2. 运行catkin_make命令
+
+```
+# In your catkin workspace
+cd ~/catkin_ws
+catkin_make
+```
+
+## 测试简单的Service 和Client
+
+### 运行Service
+
+```
+$ rosrun beginner_tutorials add_two_ints_server     (C++)
+$ rosrun beginner_tutorials add_two_ints_server.py  (Python)
+```
+
+### 运行Client
+
+```
+$ rosrun beginner_tutorials add_two_ints_client 1 3     (C++)
+$ rosrun beginner_tutorials add_two_ints_client.py 1 3  (Python)
+```
+
+## 录制与回放数据
+### 录制数据(通过创建一个bag)

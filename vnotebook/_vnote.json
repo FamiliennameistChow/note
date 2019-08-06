@@ -11,6 +11,12 @@
         },
         {
             "name": "ROS"
+        },
+        {
+            "name": "image_processing"
+        },
+        {
+            "name": "linux"
         }
     ],
     "tags": [
