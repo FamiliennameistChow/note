@@ -123,8 +123,7 @@ launch的作用就是用来一次性运行多个文件。一帮放在launch文�
 现在使用catkin_create_pkg命令来创建一个名为'beginner_tutorials'的新程序包，这个程序包依赖于std_msgs、roscpp和rospy：
 
 ```
-catkin_create_pkg <pkg_name> [depend1] [depend2
-]
+catkin_create_pkg <pkg_name> [depend1] [depend2]
 ```
 
 
@@ -133,6 +132,14 @@ catkin_create_pkg <pkg_name> [depend1] [depend2
 ```
 
 ------
+
+
+### 程序包查找
+```
+rospack find <pkg_name>
+```
+
+
 ### 查看包的依赖关系
 ####  直接依赖
 ```
@@ -521,6 +528,8 @@ $ cd launch
 $ roslaunch beginner_tutorials turtlemimic.launch
 ```
 
+
+
 -----
 
 ## 使用rosed编辑ROS中的文件
@@ -569,7 +578,7 @@ variable-length array[] and fixed-length array[C]
  geometry_msgs/TwistWithCovariance twist
 ```
 
-* 创建msg
+### 自定义msg类型
 在`beginner_tutorials`目录下
 ```
 $ mkdir msg
@@ -577,7 +586,7 @@ $ echo "int64 num" > msg/Num.msg
 ```
 
 * 接下来，还有关键的一步：我们要确保msg文件被转换成为C++，Python和其他语言的源代码
-* 查看package.xml, 确保它包含一下两条语句
+* 查看`package.xml`, 确保它包含一下两条语句
 
 ```
 <build_depend>message_generation</build_depend>
@@ -585,7 +594,7 @@ $ echo "int64 num" > msg/Num.msg
 ```
 如果没有，添加进去。 注意，在构建的时候，我们只需要"message_generation"。然而，在运行的时候，我们只需要"message_runtime"
 
-* 在 CMakeLists.txt文件中，利用find_packag函数，增加对message_generation的依赖，这样就可以生成消息了。 你可以直接在COMPONENTS的列表里增加message_generation
+* 在 `CMakeLists.txt`文件中，利用`find_packag`函数，增加对`message_generation`的依赖，这样就可以生成消息了。 你可以直接在COMPONENTS的列表里增加message_generation
 
 ```
 # Do not just add this line to your CMakeLists.txt, modify the existing line
@@ -618,6 +627,13 @@ add_message_files(
  确保添加了如下代码
 ```
  generate_messages()
+```
+
+```
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+)
 ```
 
 ### 使用rosmsg
@@ -722,6 +738,7 @@ int main(int argc, char **argv)
    * You must call one of the versions of ros::init() before using any other
    * part of the ROS system.
    */
+   // ROS节点初始化
   ros::init(argc, argv, "talker");  
 
   /**
@@ -729,6 +746,7 @@ int main(int argc, char **argv)
    * The first NodeHandle constructed will fully initialize this node, and the last
    * NodeHandle destructed will close down the node.
    */
+   // 创建句柄
   ros::NodeHandle n;
 
   /**
@@ -748,8 +766,9 @@ int main(int argc, char **argv)
    * than we can send them, the number here specifies how many messages to
    * buffer up before throwing some away.
    */
+   // 创建一个 Publisher, 发布名称为chatter的topic，消息类型为std::msgs::String
   ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
-
+   //设置循环频率
   ros::Rate loop_rate(10);
 
   /**
@@ -762,6 +781,7 @@ int main(int argc, char **argv)
     /**
      * This is a message object. You stuff it with data, and then publish it.
      */
+    //初始化std_msgs::String类型的消息
     std_msgs::String msg;
 
     std::stringstream ss;
@@ -776,10 +796,11 @@ int main(int argc, char **argv)
      * given as a template parameter to the advertise<>() call, as was done
      * in the constructor above.
      */
+    //发布消息
     chatter_pub.publish(msg);
-
+    //循环等待回调函数
     ros::spinOnce();
-
+    //按照循环频率延时
     loop_rate.sleep();
     ++count;
   }
@@ -1041,7 +1062,7 @@ generate_messages(DEPENDENCIES std_msgs)
 
 ## Declare a catkin package
 catkin_package()
-
+ 
 ## Build talker and listener
 include_directories(include ${catkin_INCLUDE_DIRS})
 
@@ -1081,11 +1102,13 @@ $ rosrun beginner_tutorials listener.py  (Python)
 ```
 
 ## 编写简单的服务器与客户端
+### 自定义srv服务文件
+查看`srv`
 
 ### 编写service节点
 在`beginner_tutorials`包中创建`src/add_two_ints_server.cpp`
 
-```
+```cpp
 #include "ros/ros.h"
 #include "beginner_tutorials/AddTwoInts.h"
 
@@ -1114,7 +1137,7 @@ int main(int argc, char **argv)
 * beginner_tutorials/AddTwoInts.h是由编译系统自动根据我们先前创建的srv文件生成的对应该srv文件的头文件
 ```
 #include "ros/ros.h"
-#include "beginner_tutorials/AddTwoInts.h"
+#include "beginner_tutorials/AddTwoInts.h"　
 ```
 
 + 这个函数提供两个int值求和的服务，int值从request里面获取，而返回数据装入response内，这些数据类型都定义在srv文件内部，函数返回一个boolean值
@@ -1190,7 +1213,7 @@ ros::ServiceClient client = n.serviceClient<beginner_tutorials::AddTwoInts>("add
   srv.request.b = atoll(argv[2]);
 ```
 
-+ 这段代码是在调用service。由于service的调用是模态过程（调用的时候占用进程阻止其他代码的执行），一旦调用完成，将返回调用结果。如果service调用成功，call()函数将返回true，srv.response里面的值将是合法的值。如果调用失败，call()函数将返回false，srv.response里面的值将是非法的
++ 这段代码是在调用service。由于service的调用是模态过程（**调用的时候占用进程阻止其他代码的执行**），一旦调用完成，将返回调用结果。如果service调用成功，call()函数将返回true，srv.response里面的值将是合法的值。如果调用失败，call()函数将返回false，srv.response里面的值将是非法的
 
 ```
   if (client.call(srv))
@@ -1238,4 +1261,89 @@ $ rosrun beginner_tutorials add_two_ints_client.py 1 3  (Python)
 ```
 
 ## 录制与回放数据
+
+-----
+
+```
+rosbag record -a
+rosbag info 
+tosbag play
+```
+
+
+-----
 ### 录制数据(通过创建一个bag)
+
+* 启动一个ros节点
+
+```
+roscore
+rosrun turtlesim turtlesim_node
+rosrun turtlesim turtle_teleop_key
+```
+
+使用`rostopic list -v`查看系统中发布的话题  
+
+![rostopic](_v_images/20190807162427879_1831467837.png)
+
+上面所发布话题部分列出的话题消息是唯一可以被录制保存到文件中的的话题消息，因为只有消息已经发布了才可以被录制。`/turtle1/com_vel`话题是`teleop_turtle`节点所发布的命令消息并作为`turtlesim`节点的输入。而`/turtle1/color_sensor`和`/turtle1/pose`是`turtlesim`节点发布出来的话题消息
+
+* 构建用于录制的临时目录， 然后在该目录下运行`rosbag record`命令，并附加`-a`选项，该选项表示将当前发布的所有话题数据都录制保存到一个bag文件中
+
+```
+mkdir ~/bagfile
+cd ~/bagfile
+rosbag record -a
+```
+
+* 执行操作
+
+* 结束录制
+
+在运行`rosbag record`的窗口中按`ctrl-c`退出命令，`bagfile`中会出现一个以**年份、日期和时间**命名的`.bag`文件
+
+### 检查回放bag文件
+
+* 使用`rosbag info`来检查录制的`bag`文件
+
+```
+rosbag info <your bagfile>
+```
+![rosbag info](_v_images/20190807164438822_1053874023.png)
+
+* 使用`rosbag play`回放
+首先在turtle_teleop_key节点运行时所在的终端窗口中按Ctrl+C退出该节点。让turtlesim节点继续运行
+
+```
+rosbag play <your bagfile>
+```
+
+默认模式下，`rosbag play`命令在公告每条消息后会等待一小段时间（0.2秒）后才真正开始发布bag文件中的内容。等待一段时间的过程可以通知消息订阅器消息已经公告了消息数据可能会马上到来。如果`rosbag play`在公告消息后立即发布，订阅器可能会接收不到几条最先发布的消息。**等待时间可以通过`-d`选项来指定**
+
+最终/turtle1/command_velocity话题将会被发布，同时在turtuelsim虚拟画面中turtle应该会像之前你通过turtle_teleop_key节点控制它一样开始移动。从运行rosbag play到turtle开始移动时所经历时间应该近似等于之前在本教程开始部分运行rosbag record后到开始按下键盘发出控制命令时所经历时间。你可以通过`-s`参数选项让rosbag play命令等待一段时间跳过bag文件初始部分后再真正开始回放。最后一个可能比较有趣的参数选项是`-r`选项，它允许你通过设定一个参数来改变消息发布速率。如果你执行：
+
+```
+rosbag play -r 2 <your bagfile>
+```
+
+### 录制数据子集
+
+当运行一个复杂的系统时，比如PR2软件系统，会有几百个话题被发布，有些话题会发布大量数据（比如包含摄像头图像流的话题）。在这种系统中，要想把所有话题都录制保存到硬盘上的单个bag文件中是不切实际的。`rosbag record`命令支持只录制某些特别指定的话题到单个`bag`文件中，这样就允许用户只录制他们感兴趣的话题
+
+* 重启turtlesim_node 与 turtle_teleop_key节点
+
+```
+rosrun turtlesim turtlesim_node
+rosrun turtlesim turtle_teleop_key
+```
+* 在bagfile下执行
+
+```
+rosbag record -O subset /turtle1/command_velocity /turtle1/pose
+rosbag record -O <bag_name> [topic_name1] [topic_name2]
+```
+ 上述命令中的`-O`参数告诉`rosbag record`将数据记录保存到名为`subset.bag`的文件中，同时后面的话题参数告诉rosbag record只能录制这两个指定的话题
+
+
+### 注意
+在前述部分中你可能已经注意到了turtle的路径可能并没有完全地映射到原先通过键盘控制时产生的路径上——整体形状应该是差不多的，但没有完全一样。造成该问题的原因是turtlesim的移动路径对系统定时精度的变化非常敏感。rosbag受制于其本身的性能无法完全复制录制时的系统运行行为，rosplay也一样。对于像turtlesim这样的节点，当处理消息的过程中系统定时发生极小变化时也会使其行为发生微妙变化，用户不应该期望能够完美的模仿系统行为
