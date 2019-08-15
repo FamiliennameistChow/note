@@ -382,7 +382,7 @@ target_link_libraries(DoDishes_server ${catkin_LIBRARIES})
 add_dependencies(DoDishes_server ${${PROJECT_NAME}_EXPORTED_TARGETS})
 ```
 
-## ros 分布式通信
+## ros 分布式通信!!!!!!!!!!!!
 
 
 * ros 是一种`分布式`的软件框架，　`松耦合`
@@ -481,7 +481,7 @@ rosrun tf tf_echo turtle1 turtle2
 rosrun rviz rviz -d `rospack find turtle_tf` /rivz/turtle_rviz.rviz
 ```
 
-#### 实现TF广播器
+#### 实现TF广播器!!!!!!!
 
 * 定义TF广播器
 
@@ -494,8 +494,8 @@ TransformBoradcaster
 ```
 sendTransform
 ```
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 #### 实现监听器
 
@@ -534,3 +534,14 @@ find_package(catkin REQUIRED COMPONENTS
 ```
 [ERROR] [1565850569.293365471]: "turtle2" passed to lookupTransform argument target_frame does not exist. 
 ```
+
+### QT工具箱
+
+
+###  Rviz可视化平台
+
+```
+rosrun rviz rviz
+```
+
+### Gazebo物理仿真环境
