@@ -8,7 +8,11 @@
 git submodule update --init --recursive
 ```
 
+## ros 与opencv
 
+```
+$ catkin_create_pkg my_image_transport image_transport cv_bridge sensor_msgs
+```
 
 ## 视觉
 

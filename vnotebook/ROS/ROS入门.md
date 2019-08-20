@@ -883,7 +883,7 @@ loop_rate.sleep();
 #! /urs/bin/env python
 # licesen removed for brecity
 import rospy
-from std_msgs,msg import String
+from std_msgs.msg import String
 
 
 def talker():
